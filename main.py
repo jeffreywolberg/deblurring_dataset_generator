@@ -1,6 +1,7 @@
 import sys
 
-from transform_state import NonblindDeblurringTransformState
+from level_one_transform_vis import LevelOneTransformVis
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -10,5 +11,8 @@ if __name__ == "__main__":
     level = int(sys.argv[1])
 
     if level == 1:
-        vis = NonblindDeblurringTransformState()
+        vis = LevelOneTransformVis()
+        vis()
+    elif level == 2:
+        vis = LinearMotionTransformVis()
         vis()

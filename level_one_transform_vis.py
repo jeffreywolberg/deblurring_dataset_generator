@@ -9,35 +9,12 @@ import cv2
 from os.path import join, basename, abspath, exists, splitext
 
 import numpy as np
+from transform_vis import TransformVis
 
-VALID_IMG_EXTENSIONS = [".png", ".jpg", ".jpeg"]
-
-class TransformState(ABC):
-    def __init__(self):
-        self.image_paths = [join(self.data_directory, fname) for fname in os.listdir(self.data_directory) if splitext(fname)[1] in VALID_IMG_EXTENSIONS]
-        self.images = [None for _ in self.image_paths]
-        self.image_no = 0
-
-        # Setup matplotlib figure and axes
-        self.fig = plt.figure(figsize=(12, 8))
-
-        self.fig.canvas.mpl_connect('key_press_event', self.on_key)
-
-
-    @property
-    @abstractmethod
-    def data_directory(self):
-        ...
-
-    def __call__(self):
-        self.update_plot()
-        plt.show()
-        
-
-class NonblindDeblurringTransformState(TransformState):
+class LevelOneTransformVis(TransformVis):
     def __init__(self):
         super().__init__()
-        self._filters = ["box", "triangle", "gaussian"]
+        self._filters = ["box", "triangle", "gaussian", "linear motion"]
         self.filter_no = 0
         self._orig_filter_state = {
             "filters": {
@@ -53,6 +30,11 @@ class NonblindDeblurringTransformState(TransformState):
                     {
                         "size": [1, 21, 2, 5], # min, max, step, cur
                         "sigma": [1, 20, 1, 2] # min, max, step, cur
+                    },
+                self._filters[3]:
+                    {
+                        "xmot": [0, 50, 1, 0],
+                        "ymot": [0, 50, 1, 0],
                     }
             }
 
@@ -106,7 +88,7 @@ class NonblindDeblurringTransformState(TransformState):
             self.sliders[f"{param_name}"] = slider
             y_pos -= 0.05
         
-        plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.1)
+        plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
 
     def update_plot(self):
         self.img_ax.imshow(self.transform())
@@ -157,6 +139,23 @@ class NonblindDeblurringTransformState(TransformState):
             ksize = self.filter_state["filters"][filter_name]["size"][3]
             sigma = self.filter_state["filters"][filter_name]["sigma"][3]
             img = cv2.GaussianBlur(img, (ksize, ksize), sigma)
+        elif filter_name == "linear motion":
+            xmot = self.filter_state["filters"][filter_name]["xmot"][3]
+            ymot = self.filter_state["filters"][filter_name]["ymot"][3]
+
+            if xmot == ymot == 0:
+                return img
+            
+            ang = np.atan2(ymot, xmot) # ccw angle from x-axis
+            h, w = ymot*2|1, xmot*2|1
+            kernel = np.zeros((h, w))
+            ch, cw = h//2, w//2
+
+            pt1 = (int(cw - (w/2) * np.cos(ang)), int(ch - (h/2) * np.sin(ang)))
+            pt2 = (int(cw + (w/2) * np.cos(ang)), int(ch + (h/2) * np.sin(ang)))
+            cv2.line(kernel, pt1, pt2, color=1, thickness=1)
+            kernel /= np.sum(kernel) # normalize to maintain brightness level
+            
+            img = cv2.filter2D(img, -1, kernel)
         
         return img
-    
