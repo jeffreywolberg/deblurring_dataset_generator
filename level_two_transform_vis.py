@@ -29,9 +29,9 @@ cy = 253.7362
 class LevelTwoTransformVis:
     def __init__(self):
         self._orig_motion_state = {
-            "roll": [-20, 20, 1, 0],
-            "pitch": [-20, 20, 1, 0],
-            "yaw": [-20, 20, 1, 0],
+            "roll": [-5, 5, 1, 0],
+            "pitch": [-5, 5, 1, 0],
+            "yaw": [-5, 5, 1, 0],
         }
         
         self.motion_state = copy.deepcopy(self._orig_motion_state)
@@ -114,8 +114,13 @@ class LevelTwoTransformVis:
         if self.images[self.image_no] is None:
             self.images[self.image_no] = cv2.imread(self.image_paths[self.image_no])[:, :, ::-1]
             print(self.images[self.image_no].shape)
-            self.depth_maps[self.image_no] = cv2.imread(self.depth_map_paths[self.image_no], cv2.IMREAD_ANYDEPTH)
+            print(self.images[self.image_no].dtype)
+            self.depth_maps[self.image_no] = cv2.imread(self.depth_map_paths[self.image_no], cv2.IMREAD_ANYDEPTH)#.astype(np.uint8)
+            print("avg z", np.average(self.depth_maps[self.image_no], axis=None))
+            print("min z", np.min(self.depth_maps[self.image_no], axis=None))
+            print("max z", np.max(self.depth_maps[self.image_no], axis=None))
             print(self.depth_maps[self.image_no].shape)
+            print(self.depth_maps[self.image_no].dtype)
 
         if splitext(self.image_paths[self.image_no])[1] == ".ppm":
             # NYU depth v2 dataset
@@ -134,8 +139,11 @@ class LevelTwoTransformVis:
         img = np.copy(self.images[self.image_no])
         print(img.shape)
         Z = self.depth_maps[self.image_no]
+        # Z = np.clip(self.depth_maps[self.image_no], 0, 1000)
+
+        # Z[np.any(np.isnan(img), axis=2)] = 
         print(img.dtype)
-        print(Z[200::100, 200::100])
+        # print(Z[200::100, 200::100])
 
         h, w = img.shape[:2]
 
@@ -151,33 +159,41 @@ class LevelTwoTransformVis:
         roll = np.deg2rad(self.motion_state["roll"][3])
         pitch = np.deg2rad(self.motion_state["pitch"][3])
         yaw = np.deg2rad(self.motion_state["yaw"][3])
-        print(roll, pitch, yaw)
+        T = 10
+        print(roll, pitch, yaw, T)
 
-        omega = np.array([pitch, yaw, roll])
-        omega_skew_sym = np.array([
-            [0, -roll, yaw],
-            [roll, 0, -pitch],
-            [-yaw, pitch, 0]
-        ])
+        # omega = np.array([pitch, yaw, roll])
+        # omega_skew_sym = np.array([
+        #     [0, -yaw, pitch],
+        #     [yaw, 0, -roll],
+        #     [-pitch, roll, 0]
+        # ])
 
-        omega_norm = np.linalg.norm(omega)
+        # omega_norm = np.linalg.norm(omega)
         # R = np.eye(3) + np.sin(omega_norm) * omega_skew_sym + (1 - np.cos(omega_norm)) * np.linalg.matrix_power(omega_skew_sym, 2)
         # XYZ = np.stack([X, Y, Z], axis=-1)
         # Xtrans = XYZ @ R.T # right multiplication, 
+
+        img_out = np.zeros(img.shape, dtype=np.float64)
         
-        dX = -pitch * Z - roll * Y
-        dY = -roll * X - pitch * Z
-        u_trans = fx * (X + dX) / Z + cx
-        v_trans = fy * (Y + dY) / Z + cy
-
         interp = RegularGridInterpolator((v, u), img, bounds_error=False, fill_value=0)
-        img = interp((v_trans, u_trans)).astype(np.uint8)
+        
+        for t in range(T):
+            dX = (t / T) * (-yaw * Y + pitch * Y)
+            dY = (t / T) * (yaw * X - roll * Z)
+            dZ = (t / T) * (-pitch * X + roll * Y)
+            u_trans = fx * (X + dX) / (Z + dZ) + cx
+            v_trans = fy * (Y + dY) / (Z + dZ) + cy
 
-        print(np.any(np.isnan(img), axis=None))
-        print(np.min(img, axis=None))
-        print(np.max(img, axis=None))
+            # v_ = np.clip(np.round(v_trans).astype(int), 0, h-1)
+            # u_ = np.clip(np.round(u_trans).astype(int), 0, w-1)
+            # img_out[v_, u_] += img / T
+            
+            img_out += interp((v_trans, u_trans)) / T
+        
+        img_out = img_out.astype(np.uint8)
 
-        return img
+        return img_out
     
     def __call__(self):
         self.update_plot()
