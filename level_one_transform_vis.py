@@ -9,11 +9,20 @@ import cv2
 from os.path import join, basename, abspath, exists, splitext
 
 import numpy as np
-from transform_vis import TransformVis
 
-class LevelOneTransformVis(TransformVis):
+VALID_IMG_EXTENSIONS = [".png", ".jpeg", ".jpg"]
+
+class LevelOneTransformVis:
     def __init__(self):
-        super().__init__()
+        self.image_directory = "./data/level1"
+        self.image_paths = [join(self.image_directory, fname) for fname in os.listdir(self.image_directory) if splitext(fname)[1] in VALID_IMG_EXTENSIONS]
+        self.images = [None for _ in self.image_paths]
+        self.image_no = 0
+
+        # Setup matplotlib figure and axes
+        self.fig = plt.figure(figsize=(12, 8))
+
+        self.fig.canvas.mpl_connect('key_press_event', self.on_key)
         self._filters = ["box", "triangle", "gaussian", "linear motion"]
         self.filter_no = 0
         self._orig_filter_state = {
@@ -93,10 +102,6 @@ class LevelOneTransformVis(TransformVis):
     def update_plot(self):
         self.img_ax.imshow(self.transform())
         plt.draw()
-
-    @property
-    def data_directory(self):
-        return "./data/level1"
     
 
     def on_key(self, key_event : KeyEvent):
@@ -159,3 +164,8 @@ class LevelOneTransformVis(TransformVis):
             img = cv2.filter2D(img, -1, kernel)
         
         return img
+    
+    
+    def __call__(self):
+        self.update_plot()
+        plt.show()

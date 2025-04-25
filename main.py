@@ -1,6 +1,7 @@
 import sys
 
 from level_one_transform_vis import LevelOneTransformVis
+from level_two_transform_vis import LevelTwoTransformVis
 
 
 if __name__ == "__main__":
@@ -14,5 +15,5 @@ if __name__ == "__main__":
         vis = LevelOneTransformVis()
         vis()
     elif level == 2:
-        vis = LinearMotionTransformVis()
+        vis = LevelTwoTransformVis()
         vis()
