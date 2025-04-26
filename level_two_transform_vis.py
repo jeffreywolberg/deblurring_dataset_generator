@@ -12,7 +12,7 @@ from scipy.interpolate import RegularGridInterpolator
 
 import numpy as np
 
-VALID_IMG_EXTENSIONS = [".png", ".jpg", ".jpeg", ".pgm", ".ppm"]
+VALID_IMG_EXTENSIONS = [".png", ".jpg", ".jpeg", ".pgm", ".ppm", ".npy"]
 
 # NYU depth v2 dataset
 fx = 518.8579
@@ -115,26 +115,28 @@ class LevelTwoTransformVis:
             self.images[self.image_no] = cv2.imread(self.image_paths[self.image_no])[:, :, ::-1]
             print(self.images[self.image_no].shape)
             print(self.images[self.image_no].dtype)
-            self.depth_maps[self.image_no] = cv2.imread(self.depth_map_paths[self.image_no], cv2.IMREAD_ANYDEPTH)#.astype(np.uint8)
+            if splitext(self.depth_map_paths[self.image_no])[1] == ".npy":
+                self.depth_maps[self.image_no] = np.load(self.depth_map_paths[self.image_no])
+            else:
+                self.depth_maps[self.image_no] = cv2.imread(self.depth_map_paths[self.image_no], cv2.IMREAD_ANYDEPTH)#.astype(np.uint8)
             print("avg z", np.average(self.depth_maps[self.image_no], axis=None))
             print("min z", np.min(self.depth_maps[self.image_no], axis=None))
             print("max z", np.max(self.depth_maps[self.image_no], axis=None))
             print(self.depth_maps[self.image_no].shape)
             print(self.depth_maps[self.image_no].dtype)
 
-        if splitext(self.image_paths[self.image_no])[1] == ".ppm":
+        # if splitext(self.image_paths[self.image_no])[1] == ".ppm":
             # NYU depth v2 dataset
-            fx = 518.8579
-            fy = 519.4696
-            cx = 325.5824
-            cy = 253.7362
-
-        else:
-            # # iPhone X intrinsics
-            fx = 4032
-            fy = 4032
-            cx = 2016
-            cy = 1512
+        fx = 518.8579
+        fy = 519.4696
+        cx = 325.5824
+        cy = 253.7362
+        # else:
+        #     # # iPhone X intrinsics
+        #     fx = 4032
+        #     fy = 4032
+        #     cx = 2016
+        #     cy = 1512
 
         img = np.copy(self.images[self.image_no])
         print(img.shape)
