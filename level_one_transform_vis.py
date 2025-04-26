@@ -100,9 +100,9 @@ class LevelOneTransformVis:
         plt.subplots_adjust(left=0.05, right=0.95, top=0.95, bottom=0.05)
 
     def update_plot(self):
+        self.img_ax.cla()
         self.img_ax.imshow(self.transform())
         plt.draw()
-    
 
     def on_key(self, key_event : KeyEvent):
         key = key_event.key
