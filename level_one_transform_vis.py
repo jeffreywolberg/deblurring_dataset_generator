@@ -42,8 +42,8 @@ class LevelOneTransformVis:
                     },
                 self._filters[3]:
                     {
-                        "xmot": [0, 50, 1, 0],
-                        "ymot": [0, 50, 1, 0],
+                        "umot": [0, 50, 1, 0],
+                        "vmot": [0, 50, 1, 0],
                     }
             }
 
@@ -57,6 +57,7 @@ class LevelOneTransformVis:
         self.update_plot()
 
     def setup_plot(self):
+        self.fig.clear()
         # Create main image display on the right
         self.img_ax = plt.subplot2grid((1, 5), (0, 1), colspan=4)
         self.img_ax.cla()
@@ -65,19 +66,11 @@ class LevelOneTransformVis:
         
         filter_name = self._filters[self.filter_no]
 
-        # Create slider panel on the left
-        if hasattr(self, 'slider_ax'):
-            self.slider_ax.remove()  # Remove the old axes completely
         self.slider_ax = plt.subplot2grid((1, 5), (0, 0))
         self.slider_ax.clear()  # Clear everything in the axes
         self.slider_ax.set_title(f"{filter_name.capitalize()} Filter")
         self.slider_ax.axis('off')  # Remove axes and numbers
 
-        if hasattr(self, 'sliders'):
-            for slider in self.sliders.values():
-                slider.ax.remove()
-
-        # Create sliders for each parameter in state
         self.sliders = {}
         y_pos = 0.90
         params = self.filter_state["filters"][filter_name]
@@ -101,6 +94,7 @@ class LevelOneTransformVis:
 
     def update_plot(self):
         self.img_ax.cla()
+        self.img_ax.axis('off')
         self.img_ax.imshow(self.transform())
         plt.draw()
 
@@ -145,14 +139,14 @@ class LevelOneTransformVis:
             sigma = self.filter_state["filters"][filter_name]["sigma"][3]
             img = cv2.GaussianBlur(img, (ksize, ksize), sigma)
         elif filter_name == "linear motion":
-            xmot = self.filter_state["filters"][filter_name]["xmot"][3]
-            ymot = self.filter_state["filters"][filter_name]["ymot"][3]
+            umot = self.filter_state["filters"][filter_name]["umot"][3]
+            vmot = self.filter_state["filters"][filter_name]["vmot"][3]
 
-            if xmot == ymot == 0:
+            if umot == vmot == 0:
                 return img
             
-            ang = np.atan2(ymot, xmot) # ccw angle from x-axis
-            h, w = ymot*2|1, xmot*2|1
+            ang = np.atan2(vmot, umot) # ccw angle from x-axis
+            h, w = vmot*2|1, umot*2|1
             kernel = np.zeros((h, w))
             ch, cw = h//2, w//2
 
