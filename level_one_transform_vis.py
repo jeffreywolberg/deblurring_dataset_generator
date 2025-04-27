@@ -19,6 +19,9 @@ class LevelOneTransformVis:
         self.images = [None for _ in self.image_paths]
         self.image_no = 0
 
+        self.save_dir ='./data/level1/saved_images'
+        os.makedirs(self.save_dir, exist_ok=True)
+
         # Setup matplotlib figure and axes
         self.fig = plt.figure(figsize=(12, 8))
 
@@ -112,7 +115,23 @@ class LevelOneTransformVis:
             self.filter_no = 0
             self.filter_state = copy.deepcopy(self._orig_filter_state)
             self.setup_plot()
+        elif key == "c":
+            im = self.transform()
+            filter_name = self._filters[self.filter_no]
+            filter_state = self.filter_state["filters"][filter_name]
+            filter_state_str = '_'.join([f"{k}-{v[3]}" for k, v in filter_state.items()])
+            img_basename, img_ext = splitext(basename(self.image_paths[self.image_no]))
+            save_path = join(self.save_dir, img_basename + f"_{filter_name}_{filter_state_str}{img_ext}")
+            cv2.imwrite(save_path, im[:, :, ::-1])
+            print(f"Saved to {save_path}")
 
+            im = cv2.imread(self.image_paths[self.image_no])
+            gt_save_path = join(self.save_dir, img_basename + f"_{filter_name}_{filter_state_str}_gt{img_ext}")
+            cv2.imwrite(gt_save_path, im)
+            print(f"Saved gt to {gt_save_path}")
+        else:
+            return
+        
         self.update_plot()
 
     def transform(self):

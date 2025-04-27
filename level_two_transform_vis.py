@@ -40,6 +40,9 @@ class LevelTwoTransformVis:
         
         self.motion_state = copy.deepcopy(self._orig_motion_state)
 
+        self.save_dir ='./data/level2/saved_images'
+        os.makedirs(self.save_dir, exist_ok=True)
+
         self.image_no = 0
         self.image_directory = "./data/level2/images"
         self.image_paths = sorted([join(self.image_directory, fname) for fname in os.listdir(self.image_directory) if splitext(fname)[1] in VALID_IMG_EXTENSIONS])
@@ -111,6 +114,21 @@ class LevelTwoTransformVis:
         elif key == "r":
             self.motion_state = copy.deepcopy(self._orig_motion_state)
             self.setup_plot()
+        elif key == "c":
+            im = self.transform()
+            im_crop = im[CROP_BORDER:-CROP_BORDER, CROP_BORDER:-CROP_BORDER] # to conceal transform artifacts
+            motion_state_str = '_'.join([f"{k}{v[3]}" for k, v in self.motion_state.items()])
+            img_basename, img_ext = splitext(basename(self.image_paths[self.image_no]))
+            save_path = join(self.save_dir, img_basename + f"_{motion_state_str}{img_ext}")
+            cv2.imwrite(save_path, im_crop[:, :, ::-1])
+            print(f"Saved transformed img to {save_path}")
+
+            im_crop = cv2.imread(self.image_paths[self.image_no])[CROP_BORDER:-CROP_BORDER, CROP_BORDER:-CROP_BORDER] # to match transformed image
+            gt_save_path = join(self.save_dir, img_basename + f"_{motion_state_str}_gt{img_ext}")
+            cv2.imwrite(gt_save_path, im_crop)
+            print(f"Saved gt to {gt_save_path}")
+        else:
+            return
 
         self.update_plot()
 
@@ -119,26 +137,13 @@ class LevelTwoTransformVis:
             self.images[self.image_no] = cv2.imread(self.image_paths[self.image_no])[:, :, ::-1]
             if splitext(self.depth_map_paths[self.image_no])[1] == ".npy":
                 self.depth_maps[self.image_no] = np.load(self.depth_map_paths[self.image_no])
-            # else: # given in mm
-                # self.depth_maps[self.image_no] = cv2.imread(self.depth_map_paths[self.image_no], cv2.IMREAD_ANYDEPTH) / 1000.0 #.astype(np.uint8)
 
         img = np.copy(self.images[self.image_no])
-        print(img.shape)
         Z = self.depth_maps[self.image_no]
-        print(Z)
         # Z = np.clip(self.depth_maps[self.image_no], 0, 1000)
-
-        # Z[np.any(np.isnan(img), axis=2)] = 
-        print(img.dtype)
-        # print(Z[200::100, 200::100])
-
         h, w = img.shape[:2]
 
         v, u = np.arange(h), np.arange(w)
-
-        print("u", u.shape)
-        print("v", v.shape)
-        print("Z", Z.shape)
 
         X = (u[None, :] - cx) * Z / fx
         # print(X)

@@ -6,7 +6,7 @@ from matplotlib.widgets import Slider
 import os
 import glob
 import cv2
-from os.path import join, basename, abspath, exists, splitext, isdir
+from os.path import join, basename, abspath, exists, splitext, isdir, realpath
 
 from scipy.interpolate import RegularGridInterpolator
 
@@ -22,13 +22,16 @@ class LevelThreeTransformVis:
             "st_frame": [0, -1, 1, 0],
             "n_avg": [1, 21, 1, 1],
         }
+
+        self.save_dir ='./data/level3/saved_images'
+        os.makedirs(self.save_dir, exist_ok=True)
         
         self.interp_state = copy.deepcopy(self._orig_interp_state)
 
         self.video_no = 0
         self.video_directory = "./data/level3/videos"
-        self.video_paths = sorted([join(self.video_directory, dirname) for dirname in os.listdir(self.video_directory)])
-        self.video_frame_paths = [sorted([join(vid_path, fname) for fname in os.listdir(vid_path)]) for vid_path in self.video_paths]
+        self.video_paths = sorted([join(self.video_directory, dirname) for dirname in os.listdir(self.video_directory) if isdir(join(self.video_directory, dirname))])
+        self.video_frame_paths = [sorted([join(vid_path, fname) for fname in os.listdir(vid_path) if splitext(fname)[1] in VALID_IMG_EXTENSIONS]) for vid_path in self.video_paths]
         self.interp_state["st_frame"][1] = len(self.video_frame_paths[self.video_no]) - 1
         self.video_frames = [np.array([]) for vid in self.video_frame_paths]
 
@@ -45,8 +48,6 @@ class LevelThreeTransformVis:
         if param == "st_frame":
             self.interp_state["n_avg"][1] = min(len(self.video_frame_paths[self.video_no]) - val, max(self._orig_interp_state["n_avg"][1], self.interp_state["n_avg"][1]))
             self.interp_state["n_avg"][3] = min(self.interp_state["n_avg"][1], self.interp_state["n_avg"][3])
-        # elif param == "n_avg":
-            # self.interp_state["st_frame"][1]
 
         self.setup_plot()
         self.update_plot()
@@ -100,6 +101,22 @@ class LevelThreeTransformVis:
             self.video_no = (self.video_no - 1) % len(self.video_paths)
         elif key == "r":
             self.interp_state = copy.deepcopy(self._orig_interp_state)
+        elif key == "c":
+            im = self.transform()
+            interp_state_str = '_'.join([f"{k}-{v[3]}" for k, v in self.interp_state.items()])
+            video_basename = basename(self.video_paths[self.video_no])
+            img_ext = splitext(self.video_frame_paths[self.video_no][0])[1]
+            save_path = join(self.save_dir, video_basename + f"_{interp_state_str}{img_ext}")
+            cv2.imwrite(save_path, im[:, :, ::-1])
+            print(f"Saved im to {realpath(save_path)}")
+
+            st_frame, n_avg = self.interp_state["st_frame"][3], self.interp_state["n_avg"][3]
+            im = self.video_frames[self.video_no][n_avg // 2]
+            print(len(self.video_frames[self.video_no]), n_avg)
+            gt_save_path = join(self.save_dir, video_basename + f"_{interp_state_str}_gt{img_ext}")
+            cv2.imwrite(gt_save_path, im[:, :, ::-1])
+            print(f"Saved gt to {realpath(gt_save_path)}")
+
         
         self.interp_state["st_frame"][1] = len(self.video_frame_paths[self.video_no]) - self.interp_state["n_avg"][3]
         self.setup_plot()
