@@ -1,6 +1,7 @@
 import sys
 
 from level_one_transform_vis import LevelOneTransformVis
+from level_three_transform_vis import LevelThreeTransformVis
 from level_two_transform_vis import LevelTwoTransformVis
 
 
@@ -13,7 +14,9 @@ if __name__ == "__main__":
 
     if level == 1:
         vis = LevelOneTransformVis()
-        vis()
     elif level == 2:
         vis = LevelTwoTransformVis()
-        vis()
+    elif level == 3:
+        vis = LevelThreeTransformVis()
+    
+    vis()
