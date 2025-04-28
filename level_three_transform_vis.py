@@ -118,6 +118,7 @@ class LevelThreeTransformVis:
             print(f"Saved gt to {realpath(gt_save_path)}")
 
         
+        self.interp_state["st_frame"][3] = self.interp_state["st_frame"][3] if  self.interp_state["st_frame"][3] < len(self.video_frame_paths[self.video_no]) else 0
         self.interp_state["st_frame"][1] = len(self.video_frame_paths[self.video_no]) - self.interp_state["n_avg"][3]
         self.setup_plot()
         self.update_plot()
@@ -133,7 +134,13 @@ class LevelThreeTransformVis:
         N, h, w, c = self.video_frames[self.video_no].shape
         assert N == n_avg
 
-        img_out = np.average(self.video_frames[self.video_no], axis=0).astype(np.uint8)
+        gamma = 2.2
+        # crf = x^1/gamma, gamma = 2.2
+        #icrf = pix ^ 2.2
+        sig = np.power(self.video_frames[self.video_no], gamma)
+        sig_out = np.average(sig, axis=0)
+        img_out = np.power(sig_out, 1 / gamma)
+        img_out = img_out.astype(np.uint8)
             
         return img_out
     
