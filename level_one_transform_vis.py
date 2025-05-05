@@ -26,7 +26,7 @@ class LevelOneTransformVis:
         self.fig = plt.figure(figsize=(12, 8))
 
         self.fig.canvas.mpl_connect('key_press_event', self.on_key)
-        self._filters = ["box", "triangle", "gaussian", "linear motion"]
+        self._filters = ["box", "triangle", "gaussian", "pixel motion"]
         self.filter_no = 0
         self._orig_filter_state = {
             "filters": {
@@ -77,7 +77,6 @@ class LevelOneTransformVis:
         self.sliders = {}
         y_pos = 0.90
         params = self.filter_state["filters"][filter_name]
-        print(filter_name)
         for param_name, values in params.items():
             ax = plt.axes([0.05, y_pos, 0.15, 0.03])
             plt.cla()
@@ -137,27 +136,24 @@ class LevelOneTransformVis:
     def transform(self):
         if self.images[self.image_no] is None:
             self.images[self.image_no] = cv2.imread(self.image_paths[self.image_no])[:, :, ::-1]
-            print(self.images[self.image_no].shape)
 
         img = np.copy(self.images[self.image_no])
 
         filter_name = self._filters[self.filter_no]
         if filter_name == "box":
             ksize = self.filter_state["filters"][filter_name]["size"][3]
-            print(ksize)
             img = cv2.boxFilter(img, 3, (ksize, ksize))
         elif filter_name == "triangle":
             ksize = self.filter_state["filters"][filter_name]["size"][3]
             triangle_func = 1 - np.abs(np.linspace(-1, 1, ksize))
             pyramid_filter = np.outer(triangle_func, triangle_func)
             pyramid_filter /= np.sum(pyramid_filter, axis=None)
-            print(np.sum(pyramid_filter, axis=None))
             img = cv2.filter2D(img, 3, pyramid_filter)
         elif filter_name == "gaussian":
             ksize = self.filter_state["filters"][filter_name]["size"][3]
             sigma = self.filter_state["filters"][filter_name]["sigma"][3]
             img = cv2.GaussianBlur(img, (ksize, ksize), sigma)
-        elif filter_name == "linear motion":
+        elif filter_name == "pixel motion":
             umot = self.filter_state["filters"][filter_name]["umot"][3]
             vmot = self.filter_state["filters"][filter_name]["vmot"][3]
 

@@ -53,7 +53,6 @@ class LevelThreeTransformVis:
         self.update_plot()
 
     def setup_plot(self):
-        print(self.interp_state)
         self.fig.clear()
         # Create main image display on the right
         self.img_ax = plt.subplot2grid((1, 5), (0, 1), colspan=4)

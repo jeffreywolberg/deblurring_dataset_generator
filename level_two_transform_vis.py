@@ -146,7 +146,6 @@ class LevelTwoTransformVis:
         v, u = np.arange(h), np.arange(w)
 
         X = (u[None, :] - cx) * Z / fx
-        # print(X)
         Y = (v[:, None] - cy) * Z / fy
 
         roll = np.deg2rad(self.motion_state["roll"][3])
@@ -156,7 +155,6 @@ class LevelTwoTransformVis:
         ymot = np.deg2rad(self.motion_state["ymot"][3])
 
         T = 10
-        print(roll, pitch, yaw, xmot, ymot, T)
 
         # omega = np.array([pitch, yaw, roll])
         # omega_skew_sym = np.array([
