@@ -8,8 +8,6 @@ import glob
 import cv2
 from os.path import join, basename, abspath, exists, splitext, isdir, realpath
 
-from scipy.interpolate import RegularGridInterpolator
-
 import numpy as np
 
 VALID_IMG_EXTENSIONS = [".png", ".jpg", ".jpeg", ".pgm", ".ppm", ".npy"]

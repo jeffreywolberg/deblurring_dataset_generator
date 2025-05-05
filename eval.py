@@ -1,8 +1,6 @@
 import numpy as np
 import cv2
 
-from skimage.metrics import structural_similarity as scikit_ssim
-
 def get_psnr(im1, im2):
     # images are of shape (H, W, C)
     assert im1.shape == im2.shape, f"im1.shape: {im1.shape} != im2.shape: {im2.shape}"
@@ -34,6 +32,7 @@ def get_ssim(im1, im2, ksize=11):
     hd = h % ksize # height diff
     wd = w % ksize # width diff 
 
+    # ensure image size is a multiple of ksize
     im1 = im1[hd // 2 : h - ((hd + 1) // 2), wd // 2 : w - ((wd + 1) // 2)]
     im2 = im2[hd // 2 : h - ((hd + 1) // 2), wd // 2 : w - ((wd + 1) // 2)]
 

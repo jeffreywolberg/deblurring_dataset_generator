@@ -4,7 +4,6 @@ from matplotlib.backend_bases import KeyEvent
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import os
-import glob
 import cv2
 from os.path import join, basename, abspath, exists, splitext
 

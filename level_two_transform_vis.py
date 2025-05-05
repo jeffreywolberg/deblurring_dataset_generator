@@ -22,12 +22,6 @@ fy = 519.4696
 cx = 325.5824
 cy = 253.7362
 
-# # iPhone X intrinsics
-# fx = 4032
-# fy = 4032
-# cx = 2016
-# cy = 1512
-
 class LevelTwoTransformVis:
     def __init__(self):
         self._orig_motion_state = {
@@ -140,7 +134,6 @@ class LevelTwoTransformVis:
 
         img = np.copy(self.images[self.image_no])
         Z = self.depth_maps[self.image_no]
-        # Z = np.clip(self.depth_maps[self.image_no], 0, 1000)
         h, w = img.shape[:2]
 
         v, u = np.arange(h), np.arange(w)
@@ -156,20 +149,9 @@ class LevelTwoTransformVis:
 
         T = 10
 
-        # omega = np.array([pitch, yaw, roll])
-        # omega_skew_sym = np.array([
-        #     [0, -yaw, pitch],
-        #     [yaw, 0, -roll],
-        #     [-pitch, roll, 0]
-        # ])
-
-        # omega_norm = np.linalg.norm(omega)
-        # R = np.eye(3) + np.sin(omega_norm) * omega_skew_sym + (1 - np.cos(omega_norm)) * np.linalg.matrix_power(omega_skew_sym, 2)
-        # XYZ = np.stack([X, Y, Z], axis=-1)
-        # Xtrans = XYZ @ R.T # right multiplication, 
-
         img_out = np.zeros(img.shape, dtype=np.float64)
         
+        # linear interpolation
         interp = RegularGridInterpolator((v, u), img, bounds_error=False, fill_value=0)
         
         for t in range(T):
@@ -179,10 +161,6 @@ class LevelTwoTransformVis:
             u_trans = fx * (X + dX) / (Z + dZ) + cx
             v_trans = fy * (Y + dY) / (Z + dZ) + cy
 
-            # v_ = np.clip(np.round(v_trans).astype(int), 0, h-1)
-            # u_ = np.clip(np.round(u_trans).astype(int), 0, w-1)
-            # img_out[v_, u_] += img / T
-            
             img_out += interp((v_trans, u_trans)) / T
         
         img_out = img_out.astype(np.uint8)
