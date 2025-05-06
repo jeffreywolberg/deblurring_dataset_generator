@@ -1,8 +1,8 @@
 ### Deblurring Dataset
 
-This repo consists of blurred images suitable for a deblurring task. There are three difficulty levels:
+This repo consists of blurred images suitable for benchmarking deblurring algorithms. There are three difficulty levels:
 
-1. **Spatially invariant non-blind deconvolution**: In this level, the kernel and its parameters are given (e.g. Gaussian(mu, sig_sq)), and the task is to recover the unblurred image. The dataset consists of images blurred with different types of kernels, such as box, triangle, and gaussian filters, and pixel horiz/vert motion blur.
+1. **Spatially invariant non-blind deconvolution**: In this level, the kernel and its parameters are given (e.g. Gaussian(mu, sig_sq)) in the problem, and the task is to recover the unblurred image. The dataset consists of images blurred with different types of kernels, such as box, triangle, and gaussian filters, and pixel horiz/vert motion blur.
 
     Derived from the [DIV2K dataset](https://data.vision.ee.ethz.ch/cvl/DIV2K/).
 
@@ -11,7 +11,7 @@ Example:
 ![](./data/level1/saved_images/0830_pixel%20motion_umot-8_vmot-1.png)
 ![](./data/level1/saved_images/0830_pixel%20motion_umot-8_vmot-1_gt.png)
 
-2. **Spatially variant blind deconvolution**: In this level, the blur parameters are not consistent throughout the image, and depend on the depth/place in the image. Synthetic rotational and linear motion is applied to still images to produce a blurred image. However, the exact parameters of motion used to blur the image should not be given, and must be estimated. The depth map can be given, optionally.
+2. **Spatially variant blind deconvolution**: In this level, the blur parameters are not consistent throughout the image, and depend on the depth/place in the image. Synthetic rotational and linear motion is applied to still images to produce a blurred image. However, the exact parameters of motion used to blur the image should not be given to the student -- they must be estimated. The depth map can be given to the student, optionally.
 
     Derived from the [NYU_depth_v2 dataset](https://cs.nyu.edu/~fergus/datasets/nyu_depth_v2.html).
 
