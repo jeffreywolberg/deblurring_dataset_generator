@@ -18,5 +18,7 @@ if __name__ == "__main__":
         vis = LevelTwoTransformVis()
     elif level == 3:
         vis = LevelThreeTransformVis()
+    else:
+        raise NotImplementedError(f"Level {level} is not implemented yet")
     
     vis()
